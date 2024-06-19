@@ -59,6 +59,9 @@ class _AddTodoItemModalState extends ConsumerState<AddTodoItemModal> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
+                const SizedBox(
+                  height: 40,
+                ),
                 TextField(
                   controller: _titleController,
                   decoration: const InputDecoration(
