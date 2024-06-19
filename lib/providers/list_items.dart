@@ -47,7 +47,6 @@ class ListItemNotifier extends StateNotifier<List<ListItem>> {
   Future<void> loadItems() async {
     final db = await _getDatabase();
     final data = await db.query('tasks');
-    print(data);
     final List<ListItem> tasks = data.map((row) {
       return ListItem(
         title: row['title'] as String,
@@ -95,19 +94,21 @@ class ListItemNotifier extends StateNotifier<List<ListItem>> {
     loadItems();
   }
 
-  Future<void> toggleCompleted(int index) async {
+  Future<void> toggleCompleted(
+      int index, String title, bool isCompleted) async {
     // Toggle the completed status in the in-memory state
-    final newItem = ListItem(
-      title: state[index].title,
-      description: state[index].description,
-      category: state[index].category,
-      completed: !state[index].completed, // Toggle completed status
-    );
 
     state = [
-      ...state.sublist(0, index),
-      newItem,
-      ...state.sublist(index + 1),
+      for (final item in state)
+        if (item.title == title)
+          ListItem(
+            title: item.title,
+            description: item.description,
+            category: item.category,
+            completed: !item.completed,
+          )
+        else
+          item,
     ];
 
     // Update the database with the new completed status
@@ -115,10 +116,10 @@ class ListItemNotifier extends StateNotifier<List<ListItem>> {
     await db.update(
       'tasks',
       {
-        'completed': newItem.completed ? 1 : 0, // Use INTEGER 1 or 0
+        'completed': isCompleted ? 1 : 0, // Use INTEGER 1 or 0
       },
       where: 'title = ?',
-      whereArgs: [newItem.title],
+      whereArgs: [title],
     );
 
     // Optionally reload items after update
