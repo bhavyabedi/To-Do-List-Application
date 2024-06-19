@@ -9,7 +9,7 @@ class ListItemNotifier extends StateNotifier<List<ListItem>> {
   TaskCategory parseCategory(String categoryString) {
     return TaskCategory.values.firstWhere(
       (e) => e.toString().split('.').last == categoryString,
-      orElse: () => TaskCategory.others, // Default or error handling
+      orElse: () => TaskCategory.others,
     );
   }
 
@@ -52,8 +52,7 @@ class ListItemNotifier extends StateNotifier<List<ListItem>> {
         title: row['title'] as String,
         description: row['description'] as String,
         completed: row['completed'] == 1,
-        category:
-            parseCategory(row['category'] as String), // Handle INTEGER 1 or 0
+        category: parseCategory(row['category'] as String),
       );
     }).toList();
     state = tasks;
@@ -96,8 +95,6 @@ class ListItemNotifier extends StateNotifier<List<ListItem>> {
 
   Future<void> toggleCompleted(
       int index, String title, bool isCompleted) async {
-    // Toggle the completed status in the in-memory state
-
     state = [
       for (final item in state)
         if (item.title == title)
@@ -111,18 +108,15 @@ class ListItemNotifier extends StateNotifier<List<ListItem>> {
           item,
     ];
 
-    // Update the database with the new completed status
     final db = await _getDatabase();
     await db.update(
       'tasks',
       {
-        'completed': isCompleted ? 1 : 0, // Use INTEGER 1 or 0
+        'completed': isCompleted ? 1 : 0,
       },
       where: 'title = ?',
       whereArgs: [title],
     );
-
-    // Optionally reload items after update
     await loadItems();
   }
 

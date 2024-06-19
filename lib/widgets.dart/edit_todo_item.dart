@@ -44,7 +44,7 @@ class _EditToDoItemModalState extends ConsumerState<EditToDoItemModal> {
             description,
             widget.category,
           );
-      Navigator.of(context).pop(); // Close the modal
+      Navigator.of(context).pop();
     }
   }
 
@@ -53,7 +53,7 @@ class _EditToDoItemModalState extends ConsumerState<EditToDoItemModal> {
     final description = _descriptionController.text;
     if (title.isNotEmpty && description.isNotEmpty) {
       ref.read(listItemsProvider.notifier).deleteItem(widget.index);
-      Navigator.of(context).pop(); // Close the modal
+      Navigator.of(context).pop();
     }
   }
 

@@ -20,13 +20,18 @@ class _AddTodoItemModalState extends ConsumerState<AddTodoItemModal> {
   void _addTodoItem() {
     final title = _titleController.text;
     final description = _descriptionController.text;
-    if (title.isNotEmpty && description.isNotEmpty) {
+    if (title.isNotEmpty) {
       ref.read(listItemsProvider.notifier).addItem(
             title,
             description,
             _selectedCategory,
           );
       Navigator.of(context).pop();
+    } else {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Title cannot be Empty!')));
     }
   }
 

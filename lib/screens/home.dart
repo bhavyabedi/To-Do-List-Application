@@ -16,7 +16,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   late Future<void> todoitemsFuture;
-  TaskCategory? selectedCategory; // New variable to hold selected category
+  TaskCategory? selectedCategory;
 
   bool showCompleted = false;
   @override
@@ -106,6 +106,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   TextSpan(
                                     text:
                                         "\n4. Completed Tasks can be seen on the last category.",
+                                    style: TextStyle(
+                                      fontStyle: FontStyle.normal,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .tertiary,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text:
+                                        "\n5. Tasks can either be dismissed in either direction to delete, or go to edit(long Press) and choose to delete.",
                                     style: TextStyle(
                                       fontStyle: FontStyle.normal,
                                       color: Theme.of(context)

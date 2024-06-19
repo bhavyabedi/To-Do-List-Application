@@ -8,7 +8,7 @@ enum TaskCategory {
 class ListItem {
   ListItem({
     required this.title,
-    required this.description,
+    this.description = '',
     required this.category,
     this.completed = false,
   });
