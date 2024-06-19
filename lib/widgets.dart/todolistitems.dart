@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:todolist/objects/item.dart';
 import 'package:todolist/providers/list_items.dart';
-import 'package:todolist/widgets.dart/edittodoitem.dart';
+import 'package:todolist/widgets.dart/edit_todo_item.dart';
 import 'package:vibration/vibration.dart';
 
 class ToDoList extends ConsumerWidget {
   const ToDoList({
     super.key,
     required this.todolist,
+    required this.showCompleted,
   });
   final List<ListItem> todolist;
+  final bool showCompleted;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -29,7 +31,9 @@ class ToDoList extends ConsumerWidget {
               height: 50,
             ),
             Text(
-              'Woo Hoo! You\'re all done!',
+              showCompleted
+                  ? "No Completed Tasks. Better get to it!"
+                  : 'Woo Hoo! You\'re all done!',
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     color: Theme.of(context).colorScheme.primary,
                     fontSize: 17,
@@ -68,9 +72,12 @@ class ToDoList extends ConsumerWidget {
                 value: todolist[index].completed,
                 onChanged: (value) {
                   if (value == true) {
-                    _showCompletionConfirmationDialog(context, ref, index);
+                    _showCompletionConfirmationDialog(
+                        context, ref, index, todolist[index].title, value!);
                   } else {
-                    ref.read(listItemsProvider.notifier).toggleCompleted(index);
+                    ref
+                        .read(listItemsProvider.notifier)
+                        .toggleCompleted(index, todolist[index].title, value!);
                     todolist[index].completed = !todolist[index].completed;
                   }
                 },
@@ -95,8 +102,8 @@ class ToDoList extends ConsumerWidget {
     }
   }
 
-  void _showCompletionConfirmationDialog(
-      BuildContext context, WidgetRef ref, int index) {
+  void _showCompletionConfirmationDialog(BuildContext context, WidgetRef ref,
+      int index, String title, bool isCompleted) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -114,7 +121,9 @@ class ToDoList extends ConsumerWidget {
             TextButton(
               child: const Text('Confirm'),
               onPressed: () {
-                ref.read(listItemsProvider.notifier).toggleCompleted(index);
+                ref
+                    .read(listItemsProvider.notifier)
+                    .toggleCompleted(index, title, isCompleted);
                 Navigator.of(context).pop();
               },
             ),
