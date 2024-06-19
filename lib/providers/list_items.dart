@@ -6,6 +6,12 @@ import 'package:todolist/objects/item.dart';
 
 class ListItemNotifier extends StateNotifier<List<ListItem>> {
   ListItemNotifier() : super(const []);
+  TaskCategory parseCategory(String categoryString) {
+    return TaskCategory.values.firstWhere(
+      (e) => e.toString().split('.').last == categoryString,
+      orElse: () => TaskCategory.others, // Default or error handling
+    );
+  }
 
   Future<Database> _getDatabase() async {
     final dbpath = await sql.getDatabasesPath();
@@ -13,11 +19,80 @@ class ListItemNotifier extends StateNotifier<List<ListItem>> {
       path.join(dbpath, 'todolist.db'),
       onCreate: (db, version) {
         return db.execute(
-            'CREATE TABLE tasks(title TEXT,description TEXT,completed INTEGER)');
+            'CREATE TABLE tasks(title TEXT,description TEXT,category TEXT,completed INTEGER)');
       },
       version: 1,
     );
     return db;
+  }
+
+  Future<void> addItem(
+      String title, String description, TaskCategory category) async {
+    final newTask = ListItem(
+      description: description,
+      title: title,
+      completed: false,
+      category: category,
+    );
+    final db = await _getDatabase();
+    await db.insert('tasks', {
+      'title': newTask.title,
+      'description': newTask.description,
+      'completed': newTask.completed ? 1 : 0,
+      'category': newTask.category.toString().split('.').last,
+    });
+    state = [newTask, ...state];
+  }
+
+  Future<void> loadItems() async {
+    final db = await _getDatabase();
+    final data = await db.query('tasks');
+    print(data);
+    final List<ListItem> tasks = data.map((row) {
+      return ListItem(
+        title: row['title'] as String,
+        description: row['description'] as String,
+        completed: row['completed'] == 1,
+        category:
+            parseCategory(row['category'] as String), // Handle INTEGER 1 or 0
+      );
+    }).toList();
+    state = tasks;
+  }
+
+  void updateItem(int index, String newTitle, String newDescription,
+      TaskCategory newCategory) async {
+    final item = state[index];
+    final updatedItem = ListItem(
+      title: newTitle,
+      description: newDescription,
+      completed: item.completed,
+      category: newCategory,
+    );
+
+    state = [
+      ...state.sublist(0, index),
+      updatedItem,
+      ...state.sublist(index + 1),
+    ];
+
+    final db = await _getDatabase();
+    await db.update(
+      'tasks',
+      {
+        'title': newTitle,
+        'description': newDescription,
+        'category': newCategory.toString().split('.').last,
+      },
+      where: 'title = ? AND description = ? AND category = ?',
+      whereArgs: [
+        item.title,
+        item.description,
+        item.category.toString().split('.').last
+      ],
+    );
+
+    loadItems();
   }
 
   Future<void> toggleCompleted(int index) async {
@@ -25,6 +100,7 @@ class ListItemNotifier extends StateNotifier<List<ListItem>> {
     final newItem = ListItem(
       title: state[index].title,
       description: state[index].description,
+      category: state[index].category,
       completed: !state[index].completed, // Toggle completed status
     );
 
@@ -47,56 +123,6 @@ class ListItemNotifier extends StateNotifier<List<ListItem>> {
 
     // Optionally reload items after update
     await loadItems();
-  }
-
-  Future<void> loadItems() async {
-    final db = await _getDatabase();
-    final data = await db.query('tasks');
-    final List<ListItem> tasks = data.map((row) {
-      return ListItem(
-        title: row['title'] as String,
-        description: row['description'] as String,
-        completed: row['completed'] == 1, // Handle INTEGER 1 or 0
-      );
-    }).toList();
-    state = tasks;
-  }
-
-  Future<void> addItem(String title, String description) async {
-    final newTask =
-        ListItem(description: description, title: title, completed: false);
-    final db = await _getDatabase();
-    await db.insert('tasks', {
-      'title': newTask.title,
-      'description': newTask.description,
-      'completed': newTask.completed ? 1 : 0, // Handle INTEGER 1 or 0
-    });
-    state = [newTask, ...state];
-  }
-
-  void updateItem(int index, String title, String description) async {
-    final item = state[index];
-    final updatedItem = ListItem(
-      title: title,
-      description: description,
-      completed: item.completed,
-    );
-
-    state = [
-      ...state.sublist(0, index),
-      updatedItem,
-      ...state.sublist(index + 1),
-    ];
-
-    final db = await _getDatabase();
-    await db.update(
-      'tasks',
-      {'title': title, 'description': description},
-      where: 'title = ? AND description = ?',
-      whereArgs: [item.title, item.description],
-    );
-
-    loadItems();
   }
 
   void deleteItem(int index) async {

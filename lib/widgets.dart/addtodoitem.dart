@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:todolist/objects/item.dart';
 import 'package:todolist/providers/list_items.dart';
 
 class AddTodoItemModal extends ConsumerStatefulWidget {
@@ -14,13 +15,33 @@ class AddTodoItemModal extends ConsumerStatefulWidget {
 class _AddTodoItemModalState extends ConsumerState<AddTodoItemModal> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  TaskCategory _selectedCategory = TaskCategory.personal;
 
   void _addTodoItem() {
     final title = _titleController.text;
     final description = _descriptionController.text;
     if (title.isNotEmpty && description.isNotEmpty) {
-      ref.read(listItemsProvider.notifier).addItem(title, description);
-      Navigator.of(context).pop(); // Close the modal
+      ref.read(listItemsProvider.notifier).addItem(
+            title,
+            description,
+            _selectedCategory,
+          );
+      Navigator.of(context).pop();
+    }
+  }
+
+  String categoryToString(TaskCategory category) {
+    switch (category) {
+      case TaskCategory.work:
+        return 'Work';
+      case TaskCategory.personal:
+        return 'Personal';
+      case TaskCategory.family:
+        return 'Family';
+      case TaskCategory.others:
+        return 'Others';
+      default:
+        throw ArgumentError('Invalid category: $category');
     }
   }
 
@@ -51,12 +72,36 @@ class _AddTodoItemModalState extends ConsumerState<AddTodoItemModal> {
                 const SizedBox(height: 10),
                 TextField(
                   controller: _descriptionController,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.tertiary,
+                  ),
                   decoration: const InputDecoration(
                     labelText: 'Description:',
                     border: OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 10),
+                DropdownButton(
+                    isExpanded: true,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 0, vertical: 10),
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.tertiary),
+                    dropdownColor: Theme.of(context).colorScheme.onSecondary,
+                    value: _selectedCategory,
+                    items: TaskCategory.values.map((category) {
+                      return DropdownMenuItem<TaskCategory>(
+                        value: category,
+                        child: Text(
+                          categoryToString(category),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (newValue) {
+                      setState(() {
+                        _selectedCategory = newValue!;
+                      });
+                    }),
                 ElevatedButton(
                   onPressed: _addTodoItem,
                   child: const Text('Add'),
